@@ -1,0 +1,64 @@
+[project]
+name = "fugu-pyqt6"
+version = "1.0.0"
+description = "PyQt6 desktop app benchmarking multi-step agent orchestration against OpenAI API and Sakana AI Fugu."
+requires-python = ">=3.11"
+dependencies = [
+    "PyQt6>=6.7",
+    "openai>=1.51",
+]
+
+[project.scripts]
+fugu = "fugu.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/fugu"]
+
+[tool.hatch.build]
+include = [
+    "src/fugu/**/*.py",
+    "src/fugu/ico/**",
+    "src/fugu/splash/**",
+]
+exclude = [
+    "**/__pycache__",
+    "**/*.pyc",
+    "**/settings.ini",
+    "**/*.db",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "scripts"]
+extend-exclude = [".venv", "build", "dist", "src/fugu/ico", "src/fugu/splash"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes (미사용 import / 정의되지 않은 이름)
+    "W",   # pycodestyle warnings
+    "I",   # isort (import 정렬)
+    "UP",  # pyupgrade (구버전 문법 현대화)
+    "B",   # flake8-bugbear
+    "SIM", # flake8-simplify
+    "C4",  # flake8-comprehensions
+    "RUF", # Ruff 고유 규칙
+]
+ignore = ["E501"]   # 줄 길이는 formatter가 처리
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.6",
+    "pre-commit>=3.7",
+]
+build = ["pyinstaller>=6.20"]

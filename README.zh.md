@@ -1,6 +1,6 @@
 [English](README.md) | [한국어](README.ko.md) | 中文 | [日本語](README.ja.md)
 
-# Fugu
+# Fugu-PyQt6
 
 PyQt6 桌面客户端，用于针对两种不同的后端对**多步骤 agent orchestration**模式进行
 基准测试：一种是传统的 OpenAI Responses API 工作流，另一种是

@@ -1,6 +1,6 @@
 [English](README.md) | [한국어](README.ko.md) | [中文](README.zh.md) | 日本語
 
-# Fugu
+# Fugu-PyQt6
 
 **multi-step agent orchestration** パターンを 2 つの異なるバックエンドに対して
 ベンチマークするための PyQt6 デスクトップクライアントです: 従来型の OpenAI

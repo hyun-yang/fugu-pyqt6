@@ -1,6 +1,6 @@
-English | [한국어](README.ko.md) | [中文](README.zh.md) | [日本語](README.ja.md)
+English | [한국어](README.ko.md) | [日本語](README.ja.md) | [中文](README.zh.md)
 
-# Fugu
+# Fugu-PyQt6
 
 PyQt6 desktop client for benchmarking **multi-step agent orchestration** patterns against
 two different backends: a conventional OpenAI Responses API workflow, and

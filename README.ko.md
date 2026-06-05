@@ -1,6 +1,6 @@
 [English](README.md) | 한국어 | [中文](README.zh.md) | [日本語](README.ja.md)
 
-# Fugu
+# Fugu-PyQt6
 
 **multi-step agent orchestration** 패턴을 두 가지 서로 다른 백엔드에 대해 벤치마킹하기
 위한 PyQt6 데스크톱 클라이언트입니다: 일반적인 OpenAI Responses API 워크플로우와,

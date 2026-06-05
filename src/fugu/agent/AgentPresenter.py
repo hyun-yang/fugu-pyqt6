@@ -1,9 +1,12 @@
+from typing import ClassVar
+
 from PyQt6.QtCore import pyqtSlot
 from PyQt6.QtWidgets import QDialog, QMessageBox, QVBoxLayout, QWidget
 
 from fugu.agent.model.AgentModel import AgentModel
 from fugu.agent.view.AgentListModel import AgentListModel
 from fugu.agent.view.AgentView import AgentView
+from fugu.chat.view.ChatView import format_chat_header
 from fugu.util.ChatType import ChatType
 from fugu.util.ConfirmationDialog import ConfirmationDialog
 from fugu.util.Constants import UI, Constants
@@ -23,7 +26,7 @@ class AgentPresenter(QWidget):
     # Provider is derived from the active tab in AgentView; this mirrors
     # AgentView._PATTERN_TO_PROVIDER so the presenter has a sane initial
     # self.llm before AgentView's current_llm_signal arrives.
-    _PATTERN_TO_PROVIDER = {
+    _PATTERN_TO_PROVIDER: ClassVar[dict[str, str]] = {
         "Evaluator": "Sakana",
         "Orchestrator": "OpenAI",
     }
@@ -90,19 +93,24 @@ class AgentPresenter(QWidget):
         self.agent_text = result
         self.agentView.update_ui(self.agent_text, stream)
 
-    @pyqtSlot(str, str, float, bool)
-    def handle_response_finished_signal(self, model, finish_reason, elapsed_time, stream):
+    @pyqtSlot(str, str, float, bool, dict)
+    def handle_response_finished_signal(
+        self, model, finish_reason, elapsed_time, stream, meta=None
+    ):
         self.view.reset_file_list(self.llm, True)
         last_ai_widget = self.view.get_last_ai_widget()
         if last_ai_widget:
-            self.agentView.update_ui_finish(model, finish_reason, elapsed_time, stream)
+            self.agentView.update_ui_finish(model, finish_reason, elapsed_time, stream, meta)
+            meta = meta or {}
             self._database.insert_agent_detail(
                 self.agent_main_id,
                 ChatType.AI.value,
                 model,
-                self.view.get_last_ai_widget().get_original_text(),
+                last_ai_widget.get_original_text(),
                 elapsed_time,
                 finish_reason,
+                usage=meta.get("usage") or {},
+                workers=meta.get("hints") or [],
             )
 
     @property
@@ -168,12 +176,33 @@ class AgentPresenter(QWidget):
                 self.view.add_user_question(ChatType.HUMAN, agent_detail["agent"])
             else:
                 self.view.add_user_question(ChatType.AI, agent_detail["agent"])
-                self.view.get_last_ai_widget().set_model_name(
-                    Constants.MODEL_PREFIX
-                    + agent_detail["agent_model"]
-                    + Constants.RESPONSE_TIME
-                    + format(float(agent_detail["elapsed_time"]), ".2f")
+                meta = self._meta_from_row(agent_detail)
+                label = format_chat_header(
+                    agent_detail["agent_model"],
+                    agent_detail.get("finish_reason"),
+                    agent_detail["elapsed_time"] or 0,
+                    meta,
                 )
+                self.view.get_last_ai_widget().set_model_name(label)
+
+    @staticmethod
+    def _meta_from_row(row):
+        """Rebuild a meta dict from a DB row in the same shape as a live response."""
+
+        def _int_or_none(v):
+            try:
+                return int(v) if v not in (None, "") else None
+            except (TypeError, ValueError):
+                return None
+
+        usage = {}
+        for key in ("input_tokens", "output_tokens", "reasoning_tokens", "total_tokens"):
+            v = _int_or_none(row.get(key))
+            if v is not None:
+                usage[key] = v
+        workers_str = row.get("workers") or ""
+        hints = [w.strip() for w in workers_str.split(",") if w.strip()] if workers_str else []
+        return {"usage": usage, "hints": hints}
 
     def delete_agent(self, index):
         self.agentViewModel.remove_agent(index)

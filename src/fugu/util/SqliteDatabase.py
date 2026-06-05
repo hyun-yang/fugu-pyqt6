@@ -444,6 +444,14 @@ class SqliteDatabase:
             )
         return []
 
+    _AGENT_DETAIL_EXTRA_COLUMNS: ClassVar[dict[str, str]] = {
+        "input_tokens": "INTEGER",
+        "output_tokens": "INTEGER",
+        "reasoning_tokens": "INTEGER",
+        "total_tokens": "INTEGER",
+        "workers": "TEXT",
+    }
+
     def create_agent_detail(self, agent_main_id):
         query = QSqlQuery()
         agent_detail_table = f"{self.agent_detail_table_name}_{agent_main_id}"
@@ -457,6 +465,11 @@ class SqliteDatabase:
                 agent TEXT,
                 elapsed_time TEXT,
                 finish_reason TEXT,
+                input_tokens INTEGER,
+                output_tokens INTEGER,
+                reasoning_tokens INTEGER,
+                total_tokens INTEGER,
+                workers TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY(agent_main_id) REFERENCES {self.agent_main_table_name}(id) ON DELETE CASCADE
             )
@@ -468,14 +481,46 @@ class SqliteDatabase:
                 f"{DATABASE_MESSAGE.DATABASE_AGENT_DETAIL_CREATE_TABLE_ERROR} {agent_main_id}: {e}"
             )
 
+    def _ensure_agent_detail_columns(self, agent_main_id):
+        """Add any missing usage columns to an existing agent-detail table via ALTER."""
+        agent_detail_table = f"{self.agent_detail_table_name}_{agent_main_id}"
+        info = QSqlQuery()
+        if not info.exec(f"PRAGMA table_info({agent_detail_table})"):
+            return
+        existing = set()
+        while info.next():
+            existing.add(info.value("name"))
+        for col, ctype in self._AGENT_DETAIL_EXTRA_COLUMNS.items():
+            if col in existing:
+                continue
+            alter = QSqlQuery()
+            try:
+                alter.exec(f"ALTER TABLE {agent_detail_table} ADD COLUMN {col} {ctype}")
+            except Exception as e:
+                print(f"agent_detail migrate error ({col}): {e}")
+
     def insert_agent_detail(
-        self, agent_main_id, agent_type, agent_model, agent, elapsed_time, finish_reason
+        self,
+        agent_main_id,
+        agent_type,
+        agent_model,
+        agent,
+        elapsed_time,
+        finish_reason,
+        usage=None,
+        workers=None,
     ):
         agent_detail_table = f"{self.agent_detail_table_name}_{agent_main_id}"
+        self._ensure_agent_detail_columns(agent_main_id)
+        usage = usage or {}
+        workers_str = ", ".join(workers) if workers else None
         query = QSqlQuery()
         query.prepare(
-            f"INSERT INTO {agent_detail_table} (agent_main_id, agent_type, agent_model, agent, elapsed_time, finish_reason) "
-            f" VALUES (:agent_main_id, :agent_type, :agent_model, :agent, :elapsed_time, :finish_reason)"
+            f"INSERT INTO {agent_detail_table} "
+            f"(agent_main_id, agent_type, agent_model, agent, elapsed_time, finish_reason, "
+            f" input_tokens, output_tokens, reasoning_tokens, total_tokens, workers) "
+            f" VALUES (:agent_main_id, :agent_type, :agent_model, :agent, :elapsed_time, :finish_reason, "
+            f"         :input_tokens, :output_tokens, :reasoning_tokens, :total_tokens, :workers)"
         )
         query.bindValue(":agent_main_id", agent_main_id)
         query.bindValue(":agent_type", agent_type)
@@ -483,6 +528,11 @@ class SqliteDatabase:
         query.bindValue(":agent", agent)
         query.bindValue(":elapsed_time", elapsed_time)
         query.bindValue(":finish_reason", finish_reason)
+        query.bindValue(":input_tokens", usage.get("input_tokens"))
+        query.bindValue(":output_tokens", usage.get("output_tokens"))
+        query.bindValue(":reasoning_tokens", usage.get("reasoning_tokens"))
+        query.bindValue(":total_tokens", usage.get("total_tokens"))
+        query.bindValue(":workers", workers_str)
         try:
             return query.exec()
         except Exception as e:
@@ -504,6 +554,7 @@ class SqliteDatabase:
 
     def get_all_agent_details_list(self, agent_main_id):
         agent_detail_table = f"{self.agent_detail_table_name}_{agent_main_id}"
+        self._ensure_agent_detail_columns(agent_main_id)
         query = QSqlQuery()
         query.prepare(f"SELECT * FROM {agent_detail_table}")
 
@@ -527,6 +578,11 @@ class SqliteDatabase:
                 "agent": query.value("agent"),
                 "elapsed_time": query.value("elapsed_time"),
                 "finish_reason": query.value("finish_reason"),
+                "input_tokens": query.value("input_tokens"),
+                "output_tokens": query.value("output_tokens"),
+                "reasoning_tokens": query.value("reasoning_tokens"),
+                "total_tokens": query.value("total_tokens"),
+                "workers": query.value("workers"),
                 "created_at": query.value("created_at"),
             }
             agent_details_list.append(agent_detail)

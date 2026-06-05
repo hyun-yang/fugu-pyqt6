@@ -160,14 +160,6 @@ flowchart LR
 
 ## セットアップ
 
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e .
-```
-
-これで `fugu` コンソールスクリプトがインストールされます。
-
 ### 初回 API キーのセットアップ
 
 API キー用の **環境変数はありません**。アプリを初回起動すると、アプリの隣に

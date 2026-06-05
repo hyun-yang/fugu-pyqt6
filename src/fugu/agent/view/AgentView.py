@@ -1,4 +1,5 @@
 import contextlib
+from typing import ClassVar
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QIcon
@@ -24,6 +25,7 @@ from PyQt6.QtWidgets import (
 )
 
 from fugu.agent.view.AgentHistory import AgentHistory
+from fugu.chat.view.ChatView import format_chat_header
 from fugu.chat.view.ChatWidget import ChatWidget
 from fugu.custom.CheckDoubleSpinBox import CheckDoubleSpinBox
 from fugu.custom.CheckSpinBox import CheckSpinBox
@@ -45,7 +47,7 @@ class AgentView(QWidget):
     # Each tab is hard-bound to one provider — switching tabs must
     # propagate that provider everywhere (in-memory cache, settings.ini,
     # and the presenter via current_llm_signal). See _sync_llm_to_pattern.
-    _PATTERN_TO_PROVIDER = {
+    _PATTERN_TO_PROVIDER: ClassVar[dict[str, str]] = {
         AgentPattern.EVALUATOR.value: AIProviderName.SAKANA.value,
         AgentPattern.ORCHESTRATOR.value: AIProviderName.OPENAI.value,
     }
@@ -992,10 +994,10 @@ class AgentView(QWidget):
             if scroll_bar.receivers(scroll_bar.rangeChanged) > 0:
                 scroll_bar.rangeChanged.disconnect()
         except (TypeError, RuntimeError):
-            # print("Scrollbar error")
+            print("Scrollbar error")
             pass
 
-    def update_ui_finish(self, model, finish_reason, elapsed_time, stream):
+    def update_ui_finish(self, model, finish_reason, elapsed_time, stream, meta=None):
         self.disconnect_scroll_range_changed()
         agentWidget = self.get_last_ai_widget()
         if stream:
@@ -1006,12 +1008,7 @@ class AgentView(QWidget):
             self.stop_widget.setVisible(False)
 
         if agentWidget and agentWidget.get_chat_type() == ChatType.AI:
-            agentWidget.set_model_name(
-                Constants.MODEL_PREFIX
-                + model
-                + Constants.RESPONSE_TIME
-                + format(elapsed_time, ".2f")
-            )
+            agentWidget.set_model_name(format_chat_header(model, finish_reason, elapsed_time, meta))
 
     def get_last_ai_widget(self) -> ChatWidget | None:
         layout_item = self.result_widget.layout().itemAt(self.result_widget.layout().count() - 1)

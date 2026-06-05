@@ -158,20 +158,12 @@ The relevant code paths in this repo:
 
 ## Setup
 
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e .
-```
-
-That installs the `fugu` console script.
-
 ### First-time API key setup
 
 There is **no environment variable** for the API key. The first time the app runs, it
 writes a `settings.ini` next to the app. To configure keys:
 
-1. Launch the app (`fugu` or `python -m fugu.main`).
+1. Launch the app (`python -m fugu.main`).
 2. Click the **Setting** toolbar button (gear icon) or **File → Setting**.
 3. Under **AI Provider**, set:
    - **OpenAI API key** — required for the OpenAI orchestrator flow

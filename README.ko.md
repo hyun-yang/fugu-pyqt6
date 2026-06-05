@@ -158,14 +158,6 @@ flowchart LR
 
 ## 설치
 
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e .
-```
-
-이 명령은 `fugu` 콘솔 스크립트를 설치합니다.
-
 ### 최초 API 키 설정
 
 API 키를 위한 **환경 변수는 없습니다**. 앱이 처음 실행되면 앱 옆에 `settings.ini`를

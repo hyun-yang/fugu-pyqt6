@@ -154,14 +154,6 @@ flowchart LR
 
 ## 安装
 
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e .
-```
-
-这会安装 `fugu` 控制台脚本。
-
 ### 首次 API key 设置
 
 **没有用于 API key 的环境变量**。应用首次运行时会在应用旁边写出一份

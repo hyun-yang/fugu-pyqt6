@@ -33,3 +33,4 @@ scripts/
 # Dev-only git/pre-commit metadata (not pushed to GitHub)
 .git-blame-ignore-revs
 .pre-commit-config.yaml
+/uv.lock

@@ -285,6 +285,109 @@ src/fugu/
 
 ---
 
-## 许可证
 
-尚未指定。
+### Evaluator-Optimizer Prompt 示例
+
+- Evaluator-Optimizer Prompt 示例
+
+```markdown
+1) Evaluator Prompt
+
+请按照以下标准评估下面的代码实现：
+1. 代码正确性
+2. 时间复杂度
+3. 风格和最佳实践
+
+你只需要进行评估，不要尝试解决该任务。
+只有当所有标准都满足且你没有进一步的改进建议时，才输出 "PASS"。
+请按照以下格式简洁地输出你的评估。
+
+<evaluation>PASS、NEEDS_IMPROVEMENT 或 FAIL</evaluation>
+<feedback>
+需要改进的内容及其原因。
+</feedback>
+
+
+2) Generator Prompt
+
+你的目标是基于 <user input> 完成任务。如果之前生成的结果有反馈，
+你应该反映这些反馈以改进你的解决方案。
+
+请按照以下格式简洁地输出你的答案：
+
+必须包含 <thoughts> 和 <response> Tag。
+
+<thoughts>
+[你对任务和反馈的理解，以及你计划如何改进]
+</thoughts>
+
+<response>
+[在这里放置你的代码实现]
+</response>
+
+
+3) Task Prompt
+
+<user input>
+实现一个 Stack，支持：
+1. push(x)
+2. pop()
+3. getMin()
+所有操作都应为 O(1)。
+</user input>
+```
+
+### Orchestrator-Worker 工作流 Prompt 示例
+
+- Orchestrator-Worker Prompt 示例
+
+```markdown
+1) Orchestrator Prompt
+
+分析以下用户问题，并将其拆分为 2 个或 3 个相关的子问题：
+
+请按照以下格式回答：
+{
+    "analysis": "详细说明你对用户问题的理解，以及你创建这些子问题的理由。",
+    "tasks": [
+        {
+            "task": "子问题 1",
+            "description": "解释这个子问题的意图和核心要点。"
+        },
+        {
+            "task": "子问题 2",
+            "description": "解释这个子问题的意图和核心要点。"
+        }
+        // 如有必要，请包含其他子问题
+    ]
+}
+最多生成 2 个或 3 个子问题。
+
+用户问题：{user_query}
+
+
+2) Worker Prompt
+
+回答从以下用户问题中派生出的子问题。
+
+原始问题：{user_query}  
+子问题：{task}
+
+说明：{description}
+
+提供一个全面且详细的回答，以回应这个子问题。
+
+
+3) Aggregator Prompt
+
+提供一个最终回答，总结下面的问题和回答。
+
+- 对子问题的回答应尽可能全面且详细。
+- 最终报告应以 Markdown 格式全面呈现。
+
+用户的原始问题：
+{user_query}
+
+子问题和最终回答：
+
+```

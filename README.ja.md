@@ -298,6 +298,109 @@ SettingsManager パターン)。
 
 ---
 
-## ライセンス
 
-未指定です。
+### Evaluator-Optimizer Prompt サンプル
+
+- Evaluator-Optimizer Prompt サンプル
+
+```markdown
+1) Evaluator Prompt
+
+次のコード実装を以下の観点で評価してください:
+1. コードの正しさ
+2. 時間計算量
+3. スタイルとベストプラクティス
+
+評価のみを行い、タスクを解こうとしないでください。
+すべての基準を満たし、改善提案がこれ以上ない場合にのみ "PASS" を出力してください。
+以下の形式で評価を簡潔に出力してください。
+
+<evaluation>PASS、NEEDS_IMPROVEMENT、または FAIL</evaluation>
+<feedback>
+改善が必要な点とその理由。
+</feedback>
+
+
+2) Generator Prompt
+
+あなたの目標は <user input> に基づいてタスクを完了することです。以前の生成結果に
+フィードバックがある場合は、それを反映して解決策を改善してください。
+
+以下の形式で回答を簡潔に出力してください:
+
+必ず <thoughts> と <response> Tag を含めてください。
+
+<thoughts>
+[タスクとフィードバックの理解、およびどのように改善する予定か]
+</thoughts>
+
+<response>
+[ここにコード実装]
+</response>
+
+
+3) Task Prompt
+
+<user input>
+以下を備えた Stack を実装してください:
+1. push(x)
+2. pop()
+3. getMin()
+すべての操作は O(1) である必要があります。
+</user input>
+```
+
+### Orchestrator-Worker ワークフロー Prompt サンプル
+
+- Orchestrator-Worker Prompt サンプル
+
+```markdown
+1) Orchestrator Prompt
+
+次のユーザーの質問を分析し、関連する 2 つまたは 3 つのサブ質問に分解してください:
+
+以下の形式で回答してください:
+{
+    "analysis": "ユーザーの質問に対する理解と、作成したサブ質問の根拠を詳しく説明してください。",
+    "tasks": [
+        {
+            "task": "サブ質問 1",
+            "description": "このサブ質問の意図と主なポイントを説明してください。"
+        },
+        {
+            "task": "サブ質問 2",
+            "description": "このサブ質問の意図と主なポイントを説明してください。"
+        }
+        // 必要に応じて追加のサブ質問を含めてください
+    ]
+}
+最大 2 つまたは 3 つのサブ質問を生成してください。
+
+ユーザーの質問: {user_query}
+
+
+2) Worker Prompt
+
+次のユーザーの質問から導き出されたサブ質問に回答してください。
+
+元の質問: {user_query}  
+サブ質問: {task}
+
+説明: {description}
+
+そのサブ質問に対応する、十分かつ詳細な回答を提供してください。
+
+
+3) Aggregator Prompt
+
+以下の質問と回答を要約した最終回答を提供してください。
+
+- サブ質問への回答は、できるだけ包括的かつ詳細である必要があります。
+- 最終レポートは Markdown 形式で包括的に提示してください。
+
+ユーザーの元の質問:
+{user_query}
+
+サブ質問と最終回答:
+
+```
